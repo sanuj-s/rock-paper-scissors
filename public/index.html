@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A beautifully designed Rock Paper Scissors game with multiplayer and a premium dark UI.">
+  <title>Rock Paper Scissors</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Username Modal -->
+  <div id="username-modal" class="modal-overlay hidden">
+    <div class="modal-card glassmorphic">
+      <h2>Enter Username</h2>
+      <p>Choose a name to enter the arena</p>
+      <input type="text" id="username-input" class="glow-input" placeholder="Your Name" maxlength="15" autocomplete="off" />
+      <button id="username-submit" class="btn-gradient">Let's Play!</button>
+    </div>
+  </div>
+
+  <!-- Leaderboard Modal -->
+  <div id="leaderboard-modal" class="modal-overlay hidden">
+    <div class="modal-card glassmorphic leaderboard-card">
+      <button id="btn-close-leaderboard" class="close-btn" aria-label="Close">✖</button>
+      <h2>Leaderboard</h2>
+      <div class="table-container">
+        <table id="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Player</th>
+              <th>W</th>
+              <th>L</th>
+              <th>D</th>
+              <th>Played</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Waiting Overlay -->
+  <div id="waiting-overlay" class="modal-overlay hidden">
+    <div class="modal-card glassmorphic waiting-card">
+      <div class="pulse-ring"></div>
+      <h3>Searching for Opponent...</h3>
+      <p id="queue-size-text">Players in queue: 0</p>
+      <button id="btn-cancel-match" class="btn-outline">Cancel Search</button>
+    </div>
+  </div>
+
+  <!-- Mode Selection Screen -->
+  <main id="mode-screen" class="screen hidden">
+    <header class="header">
+      <h1 class="title">
+        <span class="title-icon">⚔️</span>
+        <span>Game Mode</span>
+      </h1>
+      <p class="subtitle" id="welcome-text">Welcome</p>
+    </header>
+    <div class="mode-cards">
+      <div class="mode-card glassmorphic" id="mode-solo">
+        <div class="mode-icon">🤖</div>
+        <h3>Solo Mode</h3>
+        <p>Hone your skills against the CPU</p>
+      </div>
+      <div class="mode-card glassmorphic" id="mode-online">
+        <div class="mode-icon">🌐</div>
+        <h3>Online Multiplayer</h3>
+        <p>Battle real players worldwide</p>
+      </div>
+    </div>
+    <div class="mode-actions">
+      <button id="btn-show-leaderboard" class="btn-outline">🏆 View Leaderboard</button>
+      <button id="btn-change-name" class="btn-text">Change Name</button>
+    </div>
+  </main>
+
+  <!-- Game Arena Screen -->
+  <main id="app" class="screen hidden">
+    <!-- Header -->
+    <header class="header game-header">
+      <button id="btn-back-mode" class="back-btn">← Back</button>
+      <div class="header-center">
+        <h1 class="title">
+          <span class="title-icon">⚔️</span>
+          <span>Rock Paper Scissors</span>
+        </h1>
+        <div id="online-match-info" class="match-info hidden">
+          <span class="status-dot"></span>
+          <span id="match-title">You vs Opponent</span>
+          <span class="badge">Best of 5</span>
+        </div>
+      </div>
+      <div style="width: 70px;"></div> <!-- Spacer to center title -->
+    </header>
+
+    <!-- Scoreboard -->
+    <section class="scoreboard" aria-label="Scoreboard">
+      <div class="score-card player-score-card">
+        <span class="score-label" id="label-player">You</span>
+        <span class="score-value" id="player-score">0</span>
+      </div>
+      <div class="score-divider">
+        <span class="score-vs">VS</span>
+        <span class="score-round" id="round-count">Round 1</span>
+      </div>
+      <div class="score-card cpu-score-card">
+        <span class="score-label" id="label-opponent">CPU</span>
+        <span class="score-value" id="cpu-score">0</span>
+      </div>
+    </section>
+
+    <!-- Arena -->
+    <section class="arena" id="arena" aria-label="Game Arena">
+      <div class="arena-side player-side">
+        <div class="arena-label">Your Pick</div>
+        <div class="arena-hand" id="player-hand">
+          <span class="hand-emoji" id="player-emoji">❓</span>
+        </div>
+      </div>
+      <div class="arena-clash" id="clash-effect">
+        <div class="clash-burst" id="clash-burst"></div>
+      </div>
+      <div class="arena-side cpu-side">
+        <div class="arena-label" id="opponent-pick-label">CPU Pick</div>
+        <div class="arena-hand" id="cpu-hand">
+          <span class="hand-emoji" id="cpu-emoji">❓</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Result Banner -->
+    <div class="result-container" id="result-container">
+      <div class="result-banner" id="result-banner">
+        <span class="result-text" id="result-text">Make your move!</span>
+      </div>
+    </div>
+
+    <!-- Choice Buttons -->
+    <section class="choices" id="choices" aria-label="Choose your weapon">
+      <button class="choice-btn" id="btn-rock" data-choice="rock" aria-label="Choose Rock">
+        <span class="choice-emoji">🪨</span>
+        <span class="choice-name">Rock</span>
+        <div class="choice-glow"></div>
+      </button>
+      <button class="choice-btn" id="btn-paper" data-choice="paper" aria-label="Choose Paper">
+        <span class="choice-emoji">📄</span>
+        <span class="choice-name">Paper</span>
+        <div class="choice-glow"></div>
+      </button>
+      <button class="choice-btn" id="btn-scissors" data-choice="scissors" aria-label="Choose Scissors">
+        <span class="choice-emoji">✂️</span>
+        <span class="choice-name">Scissors</span>
+        <div class="choice-glow"></div>
+      </button>
+    </section>
+
+    <!-- Stats & History -->
+    <section class="stats-panel" id="stats-panel" aria-label="Game Statistics">
+      <div class="stats-row">
+        <div class="stat">
+          <span class="stat-num" id="stat-wins">0</span>
+          <span class="stat-label">Wins</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" id="stat-losses">0</span>
+          <span class="stat-label">Losses</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" id="stat-draws">0</span>
+          <span class="stat-label">Draws</span>
+        </div>
+        <div class="stat">
+          <span class="stat-num" id="stat-streak">0</span>
+          <span class="stat-label">Streak 🔥</span>
+        </div>
+      </div>
+      <div class="history" id="history-bar" aria-label="Match history"></div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
